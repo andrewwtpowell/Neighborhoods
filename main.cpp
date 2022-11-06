@@ -14,6 +14,9 @@ Data Structures Needed:
     Height
     Width
     Distance Threshold
+    Distance Travelled
+    Homes Array
+    Coordinate Stack
 
 Functions:
     Find Neighborhoods
@@ -29,12 +32,11 @@ void findNeighborhoods(int cells[arr_height][arr_width], int neighborhoods[arr_h
     //When a positive cell is found push the coordinates onto a stack
     //Calculate adjacent cells and push those coordinates onto the stack
     //Continue to do so until the distance threshold is reached
-    //If another positive cell is located at one of the adjacent cells, restart the distance counter
+    //If another positive cell is located at one of the adjacent cells, recalculate distance
 
     //Enumeration for cells in neighborhoods array
-    // 0 = unvisited cell
+    // 0 = non-neighborhood cell
     // 1 = neighborhood cell
-    // 2 = !neighborhood && visited cell
 
     //Declare stack to track adjacent coordinates
     stack<pair<int, int>> st;
