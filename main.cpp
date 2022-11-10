@@ -492,7 +492,14 @@ int calcNeighborhoodArea(int cells[arr_height][arr_width], int height, int width
             if( d < 2*n + 1 ) {
 
                 //Calculate overlap
-                for(int k = 1; k <= 2*n + 1 - d; k++) {
+                //Overlap limit is max number of diagonal lines overlapping between points
+                // 2*n + 1 is max distance between points to cause overlap, d is manhattan distance between points
+                int overlap_limit = 2*n + 1 - d;
+
+                for(int k = 1; k <= overlap_limit; k++) {
+                    
+                    //Calculate overlap as the summation of all the overlapping diagonal lines between points
+                    //Length of each diagonal line is calculated as n - |(d_x - d_y) / 2| + (k % 2)
                     overlap += n - abs((d_x - d_y) / 2) + (k % 2);
                 }
             }
