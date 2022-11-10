@@ -26,7 +26,7 @@ Functions:
 const int arr_height = 100;
 const int arr_width = 100;
 
-void findNeighborhoods(int cells[arr_height][arr_width], int neighborhoods[arr_height][arr_width], int height, int width, int dt) {
+void findNeighborhoods(int cells[arr_height][arr_width], int neighborhoods[arr_height][arr_width], int height, int width, int n) {
 
     //Iterate through the cells array searching for positive cells
     //When a positive cell is found push the coordinates onto a stack
@@ -110,8 +110,8 @@ void findNeighborhoods(int cells[arr_height][arr_width], int neighborhoods[arr_h
                     //Set distance_travelled to smallest calculated distance
                     distance_traveled = smallest_distance;
                     
-                    //Check if within distance threshold (distance_traveled < dt)
-                    if(distance_traveled <= dt) {
+                    //Check if within distance threshold (distance_traveled < n)
+                    if(distance_traveled <= n) {
 
                         //Mark current cell as in neighborhood
                         neighborhoods[y][x] = 1;
@@ -142,7 +142,7 @@ void findNeighborhoods(int cells[arr_height][arr_width], int neighborhoods[arr_h
                         for(int i = 0; i < 4; i++) {
                             
                             //Ensure all cells on adjacent vectors and within distance threshold are pushed onto stack
-                            for(int j = 1; j <= dt; j++) {
+                            for(int j = 1; j <= n; j++) {
 
                                 int adjx = x + j*d_x[i];
                                 int adjy = y + j*d_y[i];
@@ -172,7 +172,7 @@ void findNeighborhoods(int cells[arr_height][arr_width], int neighborhoods[arr_h
 
 }
 
-void findNeighborhoodsWrapped(int cells[arr_height][arr_width], int neighborhoods[arr_height][arr_width], int height, int width, int dt) {
+void findNeighborhoodsWrapped(int cells[arr_height][arr_width], int neighborhoods[arr_height][arr_width], int height, int width, int n) {
 
     //Functions the same as findNeighborhoods but includes wrapping neighborhoods when a home is located near an edge
 
@@ -266,8 +266,8 @@ void findNeighborhoodsWrapped(int cells[arr_height][arr_width], int neighborhood
                     //Set distance_travelled to smallest calculated distance
                     distance_traveled = smallest_distance;
                     
-                    //Check if within distance threshold (distance_traveled < dt)
-                    if(distance_traveled <= dt) {
+                    //Check if within distance threshold (distance_traveled < n)
+                    if(distance_traveled <= n) {
 
                         //Mark current cell as in neighborhood
                         neighborhoods[bound_y][bound_x] = 1;
@@ -303,7 +303,7 @@ void findNeighborhoodsWrapped(int cells[arr_height][arr_width], int neighborhood
                         for(int i = 0; i < 4; i++) {
 
                             //Ensure all cells on adjacent vectors and within distance threshold are pushed onto stack
-                            for(int j = 1; j <= dt; j++) {
+                            for(int j = 1; j <= n; j++) {
 
                                 int adjx = x + j*d_x[i];
                                 int adjy = y + j*d_y[i];
@@ -332,37 +332,212 @@ void findNeighborhoodsWrapped(int cells[arr_height][arr_width], int neighborhood
     }
 }
 
+int calcNeighborhoodArea(int cells[arr_height][arr_width], int height, int width, int n) {
+
+    //Initialize neighborhood_area variable to 0
+    int neighborhood_area = 0;
+
+    //Declare array to contain coordinates of homes
+    pair<int,int> homes[100];
+    int homes_itr = 0;
+
+    //Initialize array to contain only (-1,-1)
+    for(int i = 0; i < 100; i++) {
+        homes[i].first = -1;
+        homes[i].second = -1;
+    }
+
+    //Find cells that contain a positive integer
+    for(int i = 0; i < height; i++) {
+        for(int j = 0; j < width; j++) {
+
+            if(cells[i][j] == 1) {
+                homes[homes_itr].first = i;
+                homes[homes_itr].second = j;
+                homes_itr++;
+            }
+        }
+    }
+
+    //Declare pair variable to be compared against
+    pair<int,int> p;
+
+    //Declare distance, area, overlap, and overhang variables
+    int d, d_x, d_y;
+    int area = 0;
+    float overlap;
+    int overhang = 0;
+    int overhang_overlap = 0;
+
+    //Loop through homes array
+    for(int i = 0; i < homes_itr; i++) {
+
+        //Reset overhang and overhang_overlap
+        overhang = 0;
+        overhang_overlap = 0;
+
+        //Set p to current home
+        p.first = homes[i].first;
+        p.second = homes[i].second;
+
+        //Calculate area for p using equation n^2 + (n+1)^2
+        area += n*n + (n+1)*(n+1);
+
+        //Account for lower bound x edge case (x < n)
+        if(homes[i].second < n) {
+
+            //Calculate overhang area as (n - x)^2
+            overhang += (n - homes[i].second)*(n - homes[i].second);
+        }
+
+        //Account for upper bound x edge case (x > width - 1 - n)
+        if(homes[i].second > (width - 1 - n)) {
+
+            //Calculate overhang area as (n - (width - 1- x))^2
+            overhang += (n - (width - 1- homes[i].second))*(n - (width - 1- homes[i].second));
+        }
+        
+        //Account for lower bound y edge case (y < n)
+        if(homes[i].first < n) {
+
+            //Calculate overhang area as (n - y)^2
+            overhang += (n - homes[i].first)*(n - homes[i].first);
+        }
+
+        //Account for upper bound y edge case (y > height - 1 - n)
+        if(homes[i].first > (height - 1 - n)) {
+
+            //Calculate overhang area as (n - (height - 1- y))^2
+            overhang += (n - (height - 1- homes[i].first))*(n - (height - 1- homes[i].first));
+        }
+
+        //Account for Upper Left corner case (y < n && x < n)
+        if(homes[i].first < n && homes[i].second < n) {
+
+            //Calculate overlap from overhang calculations in edge cases
+
+            //Overlap limit is (n - y) + (n - x) - n - 1
+            //Simplified down to limit = n - y - x - 1
+            int overlap_limit = n - homes[i].first - homes[i].second - 1;
+            
+            //Add up  overlap until limit is reached
+            for(int i = 1; i <= overlap_limit; i++) {
+                overhang_overlap += i;
+            }
+        }
+
+        //Account for Upper Right corner case (y < n && x > width - 1 - n)
+        if(homes[i].first < n && homes[i].second > (width - 1 - n)) {
+
+            //Calculate overlap from overhang calculations in edge cases
+
+            //Overlap limit is (n - y) + (n - (width - 1 - x)) - n - 1
+            //Simplified down to limit = n - y - width + x
+            int overlap_limit = n - homes[i].first - width + homes[i].second;
+            
+            //Add up  overlap until limit is reached
+            for(int i = 1; i <= overlap_limit; i++) {
+                overhang_overlap += i;
+            }
+        }
+
+        //Account for Bottom Left corner case (y > height - 1 - n && x < n)
+        if(homes[i].first > (height - 1 - n) && homes[i].second < n) {
+
+            //Calculate overlap from overhang calculations in edge cases
+
+            //Overlap limit is (n - (height - 1 - y)) + (n - x) - n - 1
+            //Simplified down to limit = n - height + y - x
+            int overlap_limit = n - height + homes[i].first - homes[i].second;
+            
+            //Add up  overlap until limit is reached
+            for(int i = 1; i <= overlap_limit; i++) {
+                overhang_overlap += i;
+            }
+        }
+
+        //Account for Bottom Right corner case (y > height - 1 - n && x > width - 1 - n)
+        if(homes[i].first > (height - 1 - n) && homes[i].second > (width - 1 - n)) {
+
+            //Calculate overlap from overhang calculations in edge cases
+
+            //Overlap limit is (n - (height - 1 - y)) + (n - (width - 1 - x)) - n - 1
+            //Simplified down to limit = n - height + y - width + x + 1
+            int overlap_limit = n - height + homes[i].first - width + homes[i].second + 1;
+            
+            //Add up  overlap until limit is reached
+            for(int i = 1; i <= overlap_limit; i++) {
+                overhang_overlap += i;
+            }
+        }
+
+        area = area - overhang + overhang_overlap;
+        
+
+        //Loop through homes array again, starting from i
+        for(int j = i; j < homes_itr; j++) {
+
+            //Reset overlap
+            overlap = 0;
+
+            //Calculate distance between p and current home
+            d_y = abs(p.first - homes[j].first);
+            d_x = abs(p.second - homes[j].second);
+            d = d_y + d_x;
+
+            if(d == 0)
+                continue;
+
+            //Check if distance between p and current home is less than 2*n + 1
+            if( d < 2*n + 1 ) {
+
+                //Calculate overlap
+                for(int k = 1; k <= 2*n + 1 - d; k++) {
+                    overlap += n - abs((d_x - d_y) / 2) + (k % 2);
+                }
+            }
+
+            //Subtract the overlap area calculated from the total area calculated
+            area = area - (int)overlap;
+        }
+        
+    }
+
+    return area;
+
+}
+
 int main(int argc, char** argv) {
 
-    int height, width, dt;
-    bool test = false;
+    int height, width, n;
+    bool random = false;
 
     //create 2 dimensional array of fixed height and width
     int cells[arr_height][arr_width];
 
     //Random Setup
-    if (!test) {
+    if (random) {
 
         srand(time(0));
 
         //If user does not enter parameters, randomly generate Height, Width, and Distance Threshold
         //Height >= 1
         //Width >= 1
-        //Distance Threshold > 0 (upper bound?)
+        //Distance Threshold >= 0 (upper bound?)
         if(argc == 1) {
             
             height = rand() % 100 + 1;
             width = rand() % 100 + 1;
-            dt = rand() % 10 + 1;
+            n = rand() % 10;
         }
         //User enters parameters (Array Height, Array Width, Distance Threshold)
         else if(argc == 4) {
             height = stoi(argv[1]);
             width = stoi(argv[2]);
-            dt = stoi(argv[3]);
+            n = stoi(argv[3]);
 
             //if height, width, or distance threshold < 1, terminate the program
-            if(height < 1 || width < 1 || dt < 1) {
+            if(height < 1 || width < 1 || n < 1) {
                 cout << "Invalid Arguments. Please pass in only non-zero, positive integers." << endl;
                 return 0;
             }
@@ -388,22 +563,44 @@ int main(int argc, char** argv) {
     }
     //Test Setup
     else {
-        height = 10;
-        width = 10;
-        dt = 2;
 
+        //Prompt user for array height (0 to 100)
+        cout << "Please enter desired array height (1 to 100)" << endl;
+        cin >> height;
+
+        //Prompt user for array width (0 to 100)
+        cout << "Please enter desired array width (1 to 100)" << endl;
+        cin >> width;
+
+        //Prompt user for neighborhood radius (n >= 0)
+        cout << "Please enter desired neighborhood radius (n >= 0)" << endl;
+        cin >> n;
+
+        //Initialize array to have all negative integers
         for(int i = 0; i < height; i++) {
             for(int j = 0; j < width; j++) {
                 cells[i][j] = -1;
             }
         }
 
-        cells[0][1] = 1;
-        cells[2][0] = 1;
-        cells[2][8] = 1;
-        //cells[2][2] = 1;
-        //cells[3][3] = 1;
-        //cells[4][2] = 1;
+        //Prompt user to enter positive integer locations in row, col format
+        cout << "Enter locations for positive integers in row, column format. Enter -1 to finish." << endl;
+        int row, col = 0;
+        while(row >= 0 && col >= 0) {
+
+            cout << "Row: ";
+            cin >> row;
+            if(row < 0)
+                break;
+            
+            cout << "Column: ";
+            cin >> col;
+            if(col < 0)
+                break;
+
+            cells[row][col] = 1;
+        }
+
     }
 
     //Print initial array 
@@ -438,7 +635,7 @@ int main(int argc, char** argv) {
     }
 
     //Find neighborhoods
-    findNeighborhoodsWrapped(cells, neighborhoods, height, width, dt);
+    findNeighborhoods(cells, neighborhoods, height, width, n);
 
     int n_cells = 0;
 
@@ -463,6 +660,8 @@ int main(int argc, char** argv) {
     }
 
     cout << "There are " << n_cells << " cells within neighborhoods." << endl;
+
+    cout << "calcNeighborhoodArea output: " << calcNeighborhoodArea(cells, height, width, n) << endl;
 
     return 0;
 }
