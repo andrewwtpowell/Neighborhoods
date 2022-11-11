@@ -4,6 +4,7 @@
 #include <ctime>
 #include <stack>
 #include <array>
+#include <cmath>
 
 using namespace std;
 
@@ -492,16 +493,20 @@ int calcNeighborhoodArea(int cells[arr_height][arr_width], int height, int width
             if( d < 2*n + 1 ) {
 
                 //Calculate overlap
-                //Overlap limit is max number of diagonal lines overlapping between points
+                //num_diags is max number of diagonal lines overlapping between points
                 // 2*n + 1 is max distance between points to cause overlap, d is manhattan distance between points
-                int overlap_limit = 2*n + 1 - d;
+                int num_diags = 2*n + 1 - d;
 
-                for(int k = 1; k <= overlap_limit; k++) {
-                    
-                    //Calculate overlap as the summation of all the overlapping diagonal lines between points
-                    //Length of each diagonal line is calculated as n - |(d_x - d_y) / 2| + (k % 2)
-                    overlap += n - abs((d_x - d_y) / 2) + (k % 2);
-                }
+                //Calculate overlap with the equation
+                // overlap = num_diags * (n - |(d_x - d_y)/2|) + num_diags/2 + (num_diags % 2)
+                // where length of each diagonal line is n - |(d_x - d_y)/2|
+                // and extra length not captured by n - |(d_x - d_y)/2| because of lines alternating size
+                // is captured by num_diags/2 + (num_diags % 2)
+                
+                float diag_length = (float)n - abs(((float)d_x - (float)d_y)/2);
+                int diag_extra = (num_diags / 2) + (num_diags % 2);
+
+                overlap = num_diags * diag_length + diag_extra;
             }
 
             //Subtract the overlap area calculated from the total area calculated
